@@ -1053,6 +1053,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controller: {fileID: 1966513323}
   cam: {fileID: 963194228}
+  animator: {fileID: 6363047515082738962}
   speed: 6
   turnSmoothTime: 0.1
 --- !u!143 &1966513323

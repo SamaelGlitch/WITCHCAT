@@ -6,6 +6,7 @@ public class ThirdPersonMovement : MonoBehaviour
 {
     public CharacterController controller;
     public Transform cam;
+    public Animator animator;
 
     public float speed = 6f;
     public float turnSmoothTime = 0.1f;
@@ -17,6 +18,8 @@ public class ThirdPersonMovement : MonoBehaviour
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+
+        animator.SetFloat("Speed", direction.magnitude);
 
         if(direction.magnitude >= 0.1f)
         {
