@@ -6,7 +6,8 @@ using UnityEngine.AI;
 public class MovimientoEnemigo : MonoBehaviour
 {
     private NavMeshAgent agent;
-    private Transform playerTransform; // Cambiar a privado, referencia al jugador
+    private Transform playerTransform; // Referencia al Transform del jugador
+    private bool isPlayerInRange = false; // Indica si el jugador está en el rango del enemigo
 
     // Start is called before the first frame update
     void Start()
@@ -30,9 +31,17 @@ public class MovimientoEnemigo : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (playerTransform != null)
+        // Solo sigue al jugador si está en el rango
+        if (playerTransform != null && isPlayerInRange)
         {
-            agent.SetDestination(playerTransform.position); // Mover al jugador
+            agent.SetDestination(playerTransform.position); // Mover hacia el jugador
+            Debug.Log("Moviendo hacia el jugador...");
         }
+    }
+
+    // Método público para establecer si el jugador está en rango
+    public void SetPlayerInRange(bool inRange)
+    {
+        isPlayerInRange = inRange;
     }
 }
