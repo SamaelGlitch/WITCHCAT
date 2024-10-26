@@ -35,7 +35,6 @@ public class MovimientoEnemigo : MonoBehaviour
         if (playerTransform != null && isPlayerInRange)
         {
             agent.SetDestination(playerTransform.position); // Mover hacia el jugador
-            Debug.Log("Moviendo hacia el jugador...");
         }
     }
 

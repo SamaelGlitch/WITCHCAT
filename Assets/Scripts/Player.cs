@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -12,18 +13,37 @@ public class Player : MonoBehaviour
     private float nextFireTime = 0f; // Tiempo que debe esperar antes de poder disparar de nuevo
 
     [Header("Player Stats")]
-    [SerializeField] private int maxHealth = 10; // Vida máxima del jugador
+    [SerializeField] private int maxHealth = 100; // Vida máxima del jugador
     private int currentHealth; // Vida actual del jugador
 
+    [Header("Health Regeneration")]
+    [SerializeField] private int healthRegenAmount = 25; // Cantidad de salud restaurada
+    [SerializeField] private float healthRegenRate = 1.0f; // Intervalo de regeneración en segundos
+
     private bool isInvulnerable = false; // Indica si el jugador es invulnerable (después de recibir daño)
-    private float invulnerabilityDuration = 1f; // Duración de la invulnerabilidad en segundos
 
     private Animator animator; // Referencia al Animator del jugador
+    public GameManager gameManager;
+
+    [Header("Damage Settings")]
+    [SerializeField] private float damageCooldown = 1.0f; // Tiempo en segundos entre cada daño
+    private float nextDamageTime = 0f; // Tiempo de espera para el próximo daño
+
+    [Header("Audio Settings")]
+    [SerializeField] private AudioClip laserShoot; // Clip de sonido para el disparo
+    [SerializeField] private AudioClip hitHurt_cat; // Clip de sonido para el daño
+    private AudioSource audioSource; // Componente AudioSource
 
     private void Start()
     {
         // Inicializar la salud del jugador.
         currentHealth = maxHealth;
+        
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
 
         // Obtener el Animator en el hijo del jugador.
         animator = GetComponentInChildren<Animator>();
@@ -31,10 +51,18 @@ public class Player : MonoBehaviour
         {
             Debug.LogError("No se encontró un Animator en el hijo del jugador. Por favor, añade uno.");
         }
+
+        StartCoroutine(RegenerateHealth());
+    }
+
+    public int GetCurrentHealth()
+    {
+        return currentHealth;
     }
 
     private void Update()
     {
+
         // Detectar si se ha presionado el botón derecho del mouse (clic derecho).
         if (Input.GetMouseButton(1) && Time.time >= nextFireTime)
         {
@@ -61,20 +89,30 @@ public class Player : MonoBehaviour
             rb.AddForce(shootPoint.forward * shootForce, ForceMode.Impulse);
         }
 
-        Destroy(bullet, 3f);
+        if (laserShoot != null)
+        {
+            audioSource.PlayOneShot(laserShoot);
+        }
+
+        Destroy(bullet, 0.5f);
 
         // Actualizar el tiempo para el próximo disparo.
         nextFireTime = Time.time + fireRate;
     }
 
+
+
     // Función que maneja el daño recibido por el jugador y aplica un empuje
-    private void TakeDamage(int damage, Vector3 hitDirection)
+    private void TakeDamage(int damage)
     {
         if (!isInvulnerable)
         {
             currentHealth -= damage;
-            Debug.Log("Player hit! Health: " + currentHealth);
-
+            if (hitHurt_cat != null)
+            {
+                audioSource.PlayOneShot(hitHurt_cat);
+            }
+            
             // Si la salud llega a 0 o menos, el jugador muere.
             if (currentHealth <= 0)
             {
@@ -82,35 +120,43 @@ public class Player : MonoBehaviour
             }
             else
             {
-                // Activar la invulnerabilidad temporalmente.
-                StartCoroutine(InvulnerabilityCoroutine());
+
             }
         }
-    }
-
-    // Corrutina que controla el tiempo de invulnerabilidad
-    private IEnumerator InvulnerabilityCoroutine()
-    {
-        isInvulnerable = true;
-        yield return new WaitForSeconds(invulnerabilityDuration);
-        isInvulnerable = false;
     }
 
     // Función que destruye al jugador cuando muere.
     private void Die()
     {
-        Debug.Log("Player is dead!");
         // Aquí puedes añadir lógica adicional para manejar la muerte del jugador (reiniciar el nivel, mostrar un menú, etc.)
+        
         Destroy(gameObject);
     }
 
-    // Detectar colisión con el enemigo.
-    private void OnTriggerEnter(Collider other)
+    private IEnumerator RegenerateHealth()
     {
-        if (other.gameObject.CompareTag("Enemy")) // Asegúrate de que los enemigos tengan el tag "Enemy"
+        while (true)
         {
-            Vector3 hitDirection = (transform.position - other.transform.position).normalized;
-            TakeDamage(1, hitDirection); // El jugador recibe 1 punto de daño y es empujado.
+            yield return new WaitForSeconds(healthRegenRate); // Espera el intervalo de regeneración
+
+            if (currentHealth < maxHealth)
+            {
+                currentHealth += healthRegenAmount;
+                if (currentHealth > maxHealth)
+                {
+                    currentHealth = maxHealth; // Asegura que no exceda la salud máxima
+                }
+            }
+        }
+    }
+
+    // Detectar colisión con el enemigo.
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.gameObject.CompareTag("Enemy") && Time.time >= nextDamageTime)
+        {
+            TakeDamage(25); // Define cuánto daño recibe el jugador
+            nextDamageTime = Time.time + damageCooldown; // Establece el próximo tiempo en que se puede recibir daño
         }
     }
 }
