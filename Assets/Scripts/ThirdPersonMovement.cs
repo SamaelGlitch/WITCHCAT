@@ -12,30 +12,14 @@ public class ThirdPersonMovement : MonoBehaviour
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
 
-    private bool isCursorLocked = true; // Controla el estado del cursor
-
     private void Start()
     {
-        LockCursor(); // Inicialmente, el cursor está bloqueado
+        
     }
 
     void Update()
     {
-        // Alterna el estado del cursor cuando se presiona ESC
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            isCursorLocked = !isCursorLocked; // Cambia el estado
-            if (isCursorLocked)
-                LockCursor();
-            else
-                UnlockCursor();
-        }
-
-        // Llama al movimiento solo si el cursor está bloqueado
-        if (isCursorLocked)
-        {
-            HandleMovement();
-        }
+        HandleMovement();
     }
 
     private void HandleMovement()
@@ -55,17 +39,5 @@ public class ThirdPersonMovement : MonoBehaviour
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
-    }
-
-    private void LockCursor()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
-
-    private void UnlockCursor()
-    {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
     }
 }
